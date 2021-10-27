@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class TankController : MonoBehaviour
 {
@@ -10,10 +11,13 @@ public class TankController : MonoBehaviour
     public float speed = 1;
     public float pushForce = 1;
     Rigidbody rig;
+    public float vida = 5;
+    PlayerController playerScript;
 
     // Start is called before the first frame update
     void Start()
     {
+        playerScript = player.GetComponent<PlayerController>();
         rig = GetComponent<Rigidbody>();
     }
 
@@ -24,7 +28,10 @@ public class TankController : MonoBehaviour
         if (chasingPlayer)
         {
             // Rota al enemigo para que vea hacia el jugador
-            transform.LookAt(player.position);
+            Vector3 posicionJugador = player.position;
+            posicionJugador.y = transform.position.y;
+
+            transform.LookAt(posicionJugador);
             // Mueve hacia el frente al enemigo
             rig.velocity = transform.forward * speed + new Vector3(0, rig.velocity.y, 0);
         }
@@ -51,8 +58,18 @@ public class TankController : MonoBehaviour
         // Con los tags se puede saber con lo que estoy chocando
         if (collision.gameObject.tag == "Player")
         {
-            Rigidbody playerRig = collision.gameObject.transform.GetComponent<Rigidbody>();
-            playerRig.velocity = transform.forward * pushForce + new Vector3(0, playerRig.velocity.y, 0);
+            StartCoroutine(playerScript.Perder());
+        }
+
+        // Con los tags se puede saber con lo que estoy chocando
+        if (collision.gameObject.tag == "Bala")
+        {
+            vida -= 1;
+            Destroy(collision.gameObject);
+            if(vida <= 0) {
+                playerScript.EnemigoMuerto();
+                Destroy(gameObject);
+            }
         }
     }
 }
